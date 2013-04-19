@@ -2,6 +2,7 @@
 
 #include <boost/integer.hpp>
 #include <cstring>
+#include <iostream>
 
 // TODO move to utility class
 #define likely(x)       __builtin_expect((x),1)
@@ -35,11 +36,11 @@ private:
         valueType h = value;
         // Copied from Apache's AbstractHashedMap; prevents power-of-two collisions.
         h += ~(h << 9);
-        h ^= (h >> 14); // TODO was >>>
+        h ^= (h >> 14);
         h += (h << 4);
-        h ^= (h >> 10); // TODO was >>>
+        h ^= (h >> 10);
         // Power of two trick.
-        return h & (m_capacity-1); // OPTIMIZE precompute m_capacity-1
+        return h & (m_capacity-1);
     }
 
     valueType findOrEmpty(valueType value) const
@@ -50,7 +51,7 @@ private:
             if (value == existing || existing == invalidElement)
                 return index;
             index++;
-            index = index % m_capacity; // TODO use shift operations
+            index = index % m_capacity; // TODO use bit operations
         } while (true);
     }
 
@@ -62,7 +63,7 @@ private:
         return index;
     }
 
-    bool internalAddNoCount(valueType value)
+    bool internalAddValidNoCount(valueType value)
     {
         valueType index = findOrEmpty(value);
         if (m_table[index] == invalidElement) {
@@ -79,22 +80,35 @@ private:
         return result;
     }
 
-    bool internalAdd(valueType value) {
-        bool result = value==invalidElement ? internalAddInvalidNoCount() : internalAddNoCount(value);
+    bool internalAdd(valueType value)
+    {
+        bool result = value==invalidElement ? internalAddInvalidNoCount() : internalAddValidNoCount(value);
         if (result)
             m_size++;
         return result;
     }
 
-    void ensureCapacityFor(valueType expectedSize)
+    void internalAddOnlyValidNoCount(valueType* values, valueType n)
     {
-        // compute capacity
-        if (likely(m_table != 0 && 3 * m_capacity > 4 * expectedSize))
-            return; // nothing to do
-        int newCapacity = expectedSize;
+        for (valueType i=0; i<n; ++i)
+        {
+            valueType value = values[i];
+            if (value != invalidElement)
+                internalAddValidNoCount(value);
+        }
+    }
+
+    inline bool sizeFitsIntoCapacity(valueType expectedSize, valueType capacity)
+    {
+        return 3 * m_capacity > 4 * expectedSize;
+    }
+
+    int computeCapacityForSize(valueType expectedSize)
+    {
+        long newCapacity = m_capacity;
         if (newCapacity < 1)
             newCapacity = 1;
-        while (3 * newCapacity <= 4 * expectedSize) {
+        while (!sizeFitsIntoCapacity(expectedSize, newCapacity)) {
             int tmp = newCapacity * 2;
             if (tmp < newCapacity || tmp > maxCapacity) {
                 // overflow detected!
@@ -103,36 +117,44 @@ private:
             }
             newCapacity = tmp;
         }
+        return newCapacity;
+    }
 
-        // replace table
-        valueType* oldTable = m_table;
-        valueType oldCapacity = m_capacity;
+    void adjustCapacityTo(valueType newCapacity)
+    {
         m_table = new valueType[newCapacity];
         m_capacity = newCapacity;
         memset(m_table, 0, m_capacity * sizeof(valueType));
-        // now the table is correctly set up and empty (except m_size and m_containsInvalidElement)
+    }
 
-        // fill new table with old values
+
+    void ensureCapacityFor(valueType expectedSize)
+    {
+        // fast-path
+        if (likely(m_table != 0 && sizeFitsIntoCapacity(expectedSize, m_capacity)))
+            return; // nothing to do
+
+        valueType oldCapacity = m_capacity;
+        valueType newCapacity = computeCapacityForSize(expectedSize);
+        if (newCapacity == oldCapacity)
+            return;
+        valueType* oldTable = m_table;
+        adjustCapacityTo(newCapacity);
         if (oldTable)
         {
-            for (int i=0; i<oldCapacity; ++i) { // TODO replace by boost::iterator (if it's as performant)
-                valueType element = oldTable[i];
-                if (element != invalidElement)
-                    internalAddNoCount(element);
-            }
-            // free old table
+            internalAddOnlyValidNoCount(oldTable, oldCapacity);
             delete[] oldTable;
         }
+    }
+
+    HashSet(int capacity) : m_size(0), m_capacity(capacity), m_table(nullptr), m_containsInvalidElement(false)
+    {
+        adjustCapacityTo(capacity); // TODO wrong!!!
     }
 
 public:
 
     HashSet() : HashSet(minCapacity) {}
-
-    HashSet(int capacity) : m_size(0), m_table(0), m_containsInvalidElement(false)
-    {
-        ensureCapacityFor(capacity);
-    }
 
     ~HashSet()
     {

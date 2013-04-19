@@ -11,7 +11,7 @@
 
 BOOST_AUTO_TEST_CASE( hashSet_simple_int32 )
 {
-    HashSet< HashSetTraits<32> > set(100);
+    HashSet< HashSetTraits<32> > set;
     BOOST_CHECK_EQUAL(set.size(), 0);
     set += 42;
     BOOST_CHECK(set[42]);
@@ -19,6 +19,17 @@ BOOST_AUTO_TEST_CASE( hashSet_simple_int32 )
     set += 42;
     BOOST_CHECK(set[42]);
     BOOST_CHECK_EQUAL(set.size(), 1);
+}
+
+BOOST_AUTO_TEST_CASE( resizes )
+{
+    HashSet< HashSetTraits<32> > set;
+    BOOST_CHECK_EQUAL(set.capacity(), 1<<5);
+    for (int i=0; i<0.74*256; ++i)
+    {
+        set += i;
+        std::cout << "size=" << set.size() << " capacity=" << set.capacity() << std::endl;
+    }
 }
 
 typedef boost::mpl::list<int,long,unsigned char> test_types;
@@ -30,7 +41,7 @@ BOOST_AUTO_TEST_CASE( hashSet_int8_full_random_symmetric )
     boost::random::mt19937 rng;
     boost::random::uniform_int_distribution<> dist(0,255);
 
-    HashSet< HashSetTraits<8> > set(1);
+    HashSet< HashSetTraits<8> > set;
 
     std::vector<int> requests;
     for (int i=0; i<0.70*255; ++i) {

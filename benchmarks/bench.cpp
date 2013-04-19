@@ -6,7 +6,7 @@
 int main(int argc, char *argv[])
 {
     boost::random::mt19937 rng;
-    boost::random::uniform_int_distribution<> dist(0,255); // TODO use asymmetrical distribution
+    boost::random::uniform_int_distribution<> dist(0,4000000); // TODO use asymmetrical distribution
 
     HashSet< HashSetTraits<32> > set;
 
