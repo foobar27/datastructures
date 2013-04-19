@@ -28,7 +28,7 @@ BOOST_AUTO_TEST_CASE( resizes )
     for (int i=0; i<0.74*256; ++i)
     {
         set += i;
-        std::cout << "size=" << set.size() << " capacity=" << set.capacity() << std::endl;
+//        std::cout << "size=" << set.size() << " capacity=" << set.capacity() << std::endl;
     }
 }
 
@@ -38,6 +38,7 @@ typedef boost::mpl::list<int,long,unsigned char> test_types;
 
 BOOST_AUTO_TEST_CASE( hashSet_int8_full_random_symmetric )
 {
+    std::cout << "rand" << std::endl;
     boost::random::mt19937 rng;
     boost::random::uniform_int_distribution<> dist(0,255);
 
@@ -49,11 +50,9 @@ BOOST_AUTO_TEST_CASE( hashSet_int8_full_random_symmetric )
     }
 
     std::set<int> seen;
-    int n = 0;
     for (int r : requests) {
         set += r;
         seen.insert(r);
-        ++n;
     }
     for (int i=0; i<256; ++i) {
         BOOST_CHECK_EQUAL(set[i], seen.count(i));

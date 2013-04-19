@@ -13,6 +13,7 @@ struct HashSetTraits {
     static const int bitWidth = BIT_WIDTH;
     static const int minCapacity = 1 << 5;
     typedef typename boost::int_t<BIT_WIDTH>::least valueType;
+    typedef typename boost::int_t<2*BIT_WIDTH>::least indexType; // TODO this is a quick hack.
     static const int maxCapacity = std::numeric_limits<valueType>::max();
 };
 
@@ -20,20 +21,20 @@ template<class hashSetT>
 class HashSet {
 public:
     typedef typename hashSetT::valueType valueType;
+    typedef typename hashSetT::valueType indexType;
     static const int bitWidth = hashSetT::bitWidth;
     static const int invalidElement = 0;
     static const int minCapacity = hashSetT::minCapacity;
-    static const int maxCapacity = hashSetT::maxCapacity;
 private:
-    valueType m_size;
-    valueType m_capacity;
+    indexType m_size;
+    indexType m_capacity;
     valueType* m_table;
     bool m_containsInvalidElement;
 
     // TODO move to trait!
-    valueType getIndex(valueType value) const
+    indexType getIndex(valueType value) const
     {
-        valueType h = value;
+        indexType h = value;
         // Copied from Apache's AbstractHashedMap; prevents power-of-two collisions.
         h += ~(h << 9);
         h ^= (h >> 14);
@@ -43,9 +44,9 @@ private:
         return h & (m_capacity-1);
     }
 
-    valueType findOrEmpty(valueType value) const
+    indexType findOrEmpty(indexType value) const
     {
-        valueType index = getIndex(value);
+        indexType index = getIndex(value);
         do {
             const valueType existing = m_table[index];
             if (value == existing || existing == invalidElement)
@@ -55,9 +56,9 @@ private:
         } while (true);
     }
 
-    valueType find(valueType value) const
+    indexType find(valueType value) const
     {
-        valueType index = findOrEmpty(value);
+        indexType index = findOrEmpty(value);
         if (m_table[index] == invalidElement)
             return -1; // TODO correct value?
         return index;
@@ -65,7 +66,7 @@ private:
 
     bool internalAddValidNoCount(valueType value)
     {
-        valueType index = findOrEmpty(value);
+        indexType index = findOrEmpty(value);
         if (m_table[index] == invalidElement) {
             m_table[index] = value;
             return true;
@@ -88,9 +89,9 @@ private:
         return result;
     }
 
-    void internalAddOnlyValidNoCount(valueType* values, valueType n)
+    void internalAddOnlyValidNoCount(valueType* values, indexType n)
     {
-        for (valueType i=0; i<n; ++i)
+        for (indexType i=0; i<n; ++i)
         {
             valueType value = values[i];
             if (value != invalidElement)
@@ -98,29 +99,22 @@ private:
         }
     }
 
-    inline bool sizeFitsIntoCapacity(valueType expectedSize, valueType capacity)
+    inline bool sizeFitsIntoCapacity(indexType expectedSize, indexType capacity)
     {
-        return 3 * m_capacity > 4 * expectedSize;
+        // expectedSize < 0.75 * m_capacity
+        return 4 * expectedSize < 3 * capacity;
     }
 
-    int computeCapacityForSize(valueType expectedSize)
+    int computeCapacityForSize(indexType expectedSize)
     {
-        long newCapacity = m_capacity;
-        if (newCapacity < 1)
-            newCapacity = 1;
+        indexType newCapacity = m_capacity;
         while (!sizeFitsIntoCapacity(expectedSize, newCapacity)) {
-            int tmp = newCapacity * 2;
-            if (tmp < newCapacity || tmp > maxCapacity) {
-                // overflow detected!
-                newCapacity = maxCapacity;
-                break;
-            }
-            newCapacity = tmp;
+            newCapacity = newCapacity * 2;
         }
         return newCapacity;
     }
 
-    void adjustCapacityTo(valueType newCapacity)
+    void adjustCapacityTo(indexType newCapacity)
     {
         m_table = new valueType[newCapacity];
         m_capacity = newCapacity;
@@ -134,8 +128,8 @@ private:
         if (likely(m_table != 0 && sizeFitsIntoCapacity(expectedSize, m_capacity)))
             return; // nothing to do
 
-        valueType oldCapacity = m_capacity;
-        valueType newCapacity = computeCapacityForSize(expectedSize);
+        indexType oldCapacity = m_capacity;
+        indexType newCapacity = computeCapacityForSize(expectedSize);
         if (newCapacity == oldCapacity)
             return;
         valueType* oldTable = m_table;
@@ -147,7 +141,7 @@ private:
         }
     }
 
-    HashSet(int capacity) : m_size(0), m_capacity(capacity), m_table(nullptr), m_containsInvalidElement(false)
+    HashSet(indexType capacity) : m_size(0), m_capacity(capacity), m_table(nullptr), m_containsInvalidElement(false)
     {
         adjustCapacityTo(capacity); // TODO wrong!!!
     }
@@ -162,23 +156,13 @@ public:
             delete[] m_table;
     }
 
-    valueType size() const {
+    indexType size() const {
         return m_size;
     }
 
-    valueType capacity() const {
+    indexType capacity() const {
         return m_capacity;
 
-    }
-
-    void clear()
-    {
-        m_containsInvalidElement = false;
-        if (m_table)
-            delete[] m_table;
-        m_size = 0;
-        m_capacity = minCapacity;
-        m_table = new valueType[capacity];
     }
 
     bool operator[](valueType value) const
