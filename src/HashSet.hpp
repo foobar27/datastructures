@@ -2,7 +2,6 @@
 
 #include <boost/integer.hpp>
 #include <cstring>
-#include <iostream>
 
 // TODO move to utility class
 #define likely(x)       __builtin_expect((x),1)
@@ -20,8 +19,8 @@ class HashSet {
 public:
     typedef typename hashSetT::valueType valueType;
     typedef typename hashSetT::indexType indexType;
-    static const int invalidElement = 0;
-    static const int minCapacity = hashSetT::minCapacity;
+    static const valueType invalidElement = 0;
+    static const indexType minCapacity = hashSetT::minCapacity;
 private:
     indexType m_size;
     indexType m_capacity;
@@ -102,24 +101,25 @@ private:
         return 4 * expectedSize < 3 * capacity;
     }
 
-    int computeCapacityForSize(indexType expectedSize)
+    indexType computeCapacityForSize(indexType expectedSize)
     {
         indexType newCapacity = m_capacity;
         while (!sizeFitsIntoCapacity(expectedSize, newCapacity)) {
-            newCapacity = newCapacity * 2;
+            newCapacity <<= 1;
         }
         return newCapacity;
     }
 
     void adjustCapacityTo(indexType newCapacity)
     {
+        assert(newCapacity>0);
         m_table = new valueType[newCapacity];
         m_capacity = newCapacity;
         memset(m_table, 0, m_capacity * sizeof(valueType));
     }
 
 
-    void ensureCapacityFor(valueType expectedSize)
+    void ensureCapacityFor(indexType expectedSize)
     {
         // fast-path
         if (likely(m_table != 0 && sizeFitsIntoCapacity(expectedSize, m_capacity)))
@@ -169,7 +169,7 @@ public:
 
     bool operator+=(valueType value)
     {
-        ensureCapacityFor(value);
+        ensureCapacityFor(m_size+1);
         return internalAdd(value);
     }
 
