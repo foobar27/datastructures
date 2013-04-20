@@ -20,8 +20,6 @@ int main(int argc, char *argv[])
 
     HashSet< HashSetTraits<valueBitWidth, indexBitWidth> > set;
 
-    srand(42);
-
     {
         boost::timer::auto_cpu_timer t;
         for (int n=0; n<numberOfItems; ++n) {
