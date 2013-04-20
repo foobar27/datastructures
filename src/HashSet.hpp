@@ -21,7 +21,7 @@ template<class hashSetT>
 class HashSet {
 public:
     typedef typename hashSetT::valueType valueType;
-    typedef typename hashSetT::valueType indexType;
+    typedef typename hashSetT::indexType indexType;
     static const int bitWidth = hashSetT::bitWidth;
     static const int invalidElement = 0;
     static const int minCapacity = hashSetT::minCapacity;
