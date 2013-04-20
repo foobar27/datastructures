@@ -140,7 +140,7 @@ private:
 
     HashSet(indexType capacity) : m_size(0), m_capacity(capacity), m_table(nullptr), m_containsInvalidElement(false)
     {
-        adjustCapacityTo(capacity); // TODO wrong!!!
+        adjustCapacityTo(capacity);
     }
 
 public:
