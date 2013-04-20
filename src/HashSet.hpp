@@ -8,13 +8,11 @@
 #define likely(x)       __builtin_expect((x),1)
 #define unlikely(x)     __builtin_expect((x),0)
 
-template<unsigned int BIT_WIDTH>
+template<unsigned int VALUE_BIT_WIDTH, unsigned int INDEX_BIT_WIDTH = 2*VALUE_BIT_WIDTH>
 struct HashSetTraits {
-    static const int bitWidth = BIT_WIDTH;
     static const int minCapacity = 1 << 5;
-    typedef typename boost::int_t<BIT_WIDTH>::least valueType;
-    typedef typename boost::int_t<2*BIT_WIDTH>::least indexType; // TODO this is a quick hack.
-    static const int maxCapacity = std::numeric_limits<valueType>::max();
+    typedef typename boost::uint_t<VALUE_BIT_WIDTH>::least valueType;
+    typedef typename boost::uint_t<INDEX_BIT_WIDTH>::least indexType; // TODO this is a quick hack.
 };
 
 template<class hashSetT>
@@ -22,7 +20,6 @@ class HashSet {
 public:
     typedef typename hashSetT::valueType valueType;
     typedef typename hashSetT::indexType indexType;
-    static const int bitWidth = hashSetT::bitWidth;
     static const int invalidElement = 0;
     static const int minCapacity = hashSetT::minCapacity;
 private:
