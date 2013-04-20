@@ -1,5 +1,4 @@
 add_definitions(-DBOOST_TEST_DYN_LINK)
-set(CMAKE_CXX_FLAGS "-std=c++0x")
 
 include_directories(../src)
 
