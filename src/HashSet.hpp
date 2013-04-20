@@ -122,7 +122,7 @@ private:
     void ensureCapacityFor(indexType expectedSize)
     {
         // fast-path
-        if (likely(m_table != 0 && sizeFitsIntoCapacity(expectedSize, m_capacity)))
+        if (likely(sizeFitsIntoCapacity(expectedSize, m_capacity)))
             return; // nothing to do
 
         indexType oldCapacity = m_capacity;
