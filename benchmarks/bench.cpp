@@ -11,16 +11,20 @@ int main(int argc, char *argv[])
     const int valueBitWidth = 32;
     const int indexBitWidth = 64;
 
-    boost::random::mt19937 rng;
+    boost::random::mt19937 rng; //
     boost::uint_t<valueBitWidth>::least maxValue = std::numeric_limits<boost::int_t<valueBitWidth>::least>::max(); // TODO replace by 1L<<valueBitWidth
     std::cout << "maxValue=" << maxValue << std::endl;
     boost::random::uniform_int_distribution<> dist(0,maxValue);
 
+    int numberOfItems = 16000000;
+
     HashSet< HashSetTraits<valueBitWidth, indexBitWidth> > set;
+
+    srand(42);
 
     {
         boost::timer::auto_cpu_timer t;
-        for (int n=0; n<0.70*maxValue; ++n) {
+        for (int n=0; n<numberOfItems; ++n) {
             int r = dist(rng);
             set += r;
         }
