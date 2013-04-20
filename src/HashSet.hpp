@@ -45,7 +45,7 @@ private:
         indexType index = getIndex(value);
         do {
             const valueType existing = m_table[index];
-            if ((value == existing || existing == invalidElement))
+            if (likely(value == existing || existing == invalidElement))
                 return index;
             index++;
             index = index % m_capacity; // TODO use bit operations
