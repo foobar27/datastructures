@@ -7,6 +7,7 @@
 // TODO code reuse for other benchmark programs
 // TODO ifdef userspace-rcu supported
 
+#include <memory>
 #include <thread>
 #include <iostream>
 #include <string>
@@ -73,25 +74,27 @@ public:
   }
 };
 
-#define NEW_WORKER(type, nBits) \
-  { \
-    WorkerSpecification spec = WorkerSpecification(#type, (nBits)); \
-    specMap[spec] = new Worker<type<boost::uint_t<nBits>::least>>(); \
+typedef std::map<WorkerSpecification, std::shared_ptr<BaseWorker>> SpecMapType;
+
+#define NEW_WORKER(specMap, type, nBits) \
+  {                                                                                  \
+    WorkerSpecification spec = WorkerSpecification(#type, (nBits));                  \
+    specMap[spec] = std::shared_ptr<BaseWorker>(new Worker<type<boost::uint_t<nBits>::least>>()); \
   }
 
-#define NEW_WORKERS(nBits) \
-  { \
-    NEW_WORKER(UnsynchronizedCounter, nBits) \
-    NEW_WORKER(AtomicCounter, nBits) \
-    NEW_WORKER(UrcuAtomicCounter, nBits) \
-    NEW_WORKER(ThreadLocalCounter, nBits) \
+#define NEW_WORKERS(specMap, nBits) \
+  {                                                   \
+    NEW_WORKER(specMap, UnsynchronizedCounter, nBits) \
+    NEW_WORKER(specMap, AtomicCounter, nBits)         \
+    NEW_WORKER(specMap, UrcuAtomicCounter, nBits)     \
+    NEW_WORKER(specMap, ThreadLocalCounter, nBits)    \
   }
 
 int main(int argc, char *argv[])
 {
-  std::map<WorkerSpecification, BaseWorker*> specMap; // TODO destroy
-  NEW_WORKERS(32)
-  NEW_WORKERS(64)
+  SpecMapType specMap;
+  NEW_WORKERS(specMap, 32)
+  NEW_WORKERS(specMap, 64)
 
   unsigned int nCpus = std::thread::hardware_concurrency();
 
@@ -116,7 +119,7 @@ int main(int argc, char *argv[])
 
     unsigned int nThreads = vm["number-of-threads"].as<unsigned int>();
     std::vector<std::thread> threads;
-    BaseWorker* worker = specMap[WorkerSpecification(vm)];
+    std::shared_ptr<BaseWorker> worker = specMap[WorkerSpecification(vm)];
     if (worker == nullptr) { // TODO or do we need to call contains?
       std::cerr << "implementation not found!" << std::endl;
       return 1;
