@@ -80,18 +80,19 @@ public:
     specMap[spec] = new Worker<type<boost::uint_t<nBits>::least>>(); \
   }
 
+#define NEW_WORKERS(nBits) \
+  { \
+    NEW_WORKER(UnsynchronizedCounter, nBits) \
+    NEW_WORKER(AtomicCounter, nBits) \
+    NEW_WORKER(UrcuAtomicCounter, nBits) \
+    NEW_WORKER(ThreadLocalCounter, nBits) \
+  }
+
 int main(int argc, char *argv[])
 {
   std::map<WorkerSpecification, BaseWorker*> specMap; // TODO destroy
-  NEW_WORKER(UnsynchronizedCounter, 64)
-  NEW_WORKER(AtomicCounter, 64)
-  NEW_WORKER(UrcuAtomicCounter, 64)
-  NEW_WORKER(ThreadLocalCounter, 64)
-
-  NEW_WORKER(UnsynchronizedCounter, 32)
-  NEW_WORKER(AtomicCounter, 32)
-  NEW_WORKER(UrcuAtomicCounter, 32)
-  NEW_WORKER(ThreadLocalCounter, 32)
+  NEW_WORKERS(32)
+  NEW_WORKERS(64)
 
   unsigned int nCpus = std::thread::hardware_concurrency();
 
