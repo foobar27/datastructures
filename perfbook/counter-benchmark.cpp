@@ -74,41 +74,24 @@ public:
   }
 };
 
+#define NEW_WORKER(type, nBits) \
+  { \
+    WorkerSpecification spec = WorkerSpecification(#type, (nBits)); \
+    specMap[spec] = new Worker<type<boost::uint_t<nBits>::least>>(); \
+  }
+
 int main(int argc, char *argv[])
 {
   std::map<WorkerSpecification, BaseWorker*> specMap; // TODO destroy
-  {
-    WorkerSpecification spec = WorkerSpecification("UnsynchronizedCounter", 64); // needs to be an lvalue
-    specMap[spec] = new Worker<UnsynchronizedCounter<boost::uint_t<64>::least>>();
-  }
-  {
-    WorkerSpecification spec = WorkerSpecification("AtomicCounter", 64); // needs to be an lvalue
-    specMap[spec] = new Worker<AtomicCounter<boost::uint_t<64>::least>>();
-  }
-  {
-    WorkerSpecification spec = WorkerSpecification("UrcuAtomicCounter", 64); // needs to be an lvalue
-    specMap[spec] = new Worker<UrcuAtomicCounter<boost::uint_t<64>::least>>();
-  }
-  {
-    WorkerSpecification spec = WorkerSpecification("ThreadLocalCounter", 64); // needs to be an lvalue
-    specMap[spec] = new Worker<ThreadLocalCounter<boost::uint_t<64>::least>>();
-  }
-  {
-    WorkerSpecification spec = WorkerSpecification("UnsynchronizedCounter", 32); // needs to be an lvalue
-    specMap[spec] = new Worker<UnsynchronizedCounter<boost::uint_t<32>::least>>();
-  }
-  {
-    WorkerSpecification spec = WorkerSpecification("AtomicCounter", 32); // needs to be an lvalue
-    specMap[spec] = new Worker<AtomicCounter<boost::uint_t<32>::least>>();
-  }
-  {
-    WorkerSpecification spec = WorkerSpecification("UrcuAtomicCounter", 32); // needs to be an lvalue
-    specMap[spec] = new Worker<UrcuAtomicCounter<boost::uint_t<32>::least>>();
-  }
-  {
-    WorkerSpecification spec = WorkerSpecification("ThreadLocalCounter", 32); // needs to be an lvalue
-    specMap[spec] = new Worker<ThreadLocalCounter<boost::uint_t<32>::least>>();
-  }
+  NEW_WORKER(UnsynchronizedCounter, 64)
+  NEW_WORKER(AtomicCounter, 64)
+  NEW_WORKER(UrcuAtomicCounter, 64)
+  NEW_WORKER(ThreadLocalCounter, 64)
+
+  NEW_WORKER(UnsynchronizedCounter, 32)
+  NEW_WORKER(AtomicCounter, 32)
+  NEW_WORKER(UrcuAtomicCounter, 32)
+  NEW_WORKER(ThreadLocalCounter, 32)
 
   unsigned int nCpus = std::thread::hardware_concurrency();
 
