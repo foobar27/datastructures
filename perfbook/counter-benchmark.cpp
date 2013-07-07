@@ -1,4 +1,3 @@
-// TODO use boost preprocessor programming for dispatch
 // TODO different program_option groups:
 // - template arguments
 // - variable arguments
