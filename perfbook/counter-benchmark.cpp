@@ -45,10 +45,6 @@ struct WorkerArguments {
   {}
 };
 
-template<typename T>
-int dispatchWork(const WorkerSpecification & spec, const WorkerArguments & args) {
-}
-
 class BaseWorker {
 public:
   virtual void work(const WorkerArguments&) = 0;
